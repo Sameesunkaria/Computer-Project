@@ -8,7 +8,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <string>
 
 using namespace std;
 
@@ -121,7 +120,7 @@ void editReservation() {
     ofstream outfile("database", ios::binary | ios::out | ios::app);
     int nRoom;
     int flag = -1;
-    char reply;
+    string reply;
     cout << "Please enter your room number: ";
     cin >> nRoom;
     while (!infile.eof()) {
@@ -140,7 +139,7 @@ void editReservation() {
     else {
         cout << "Are you sure you wan to change this record? ";
         cin >> reply;
-        if (strcmp(&reply, "y") == 0 || strcmp(&reply, "Y") == 0) {
+        if (reply == "y" || reply == "Y") {
             string sName;
             int nNights;
             cout << "Please enter the following details:" << endl << endl;
