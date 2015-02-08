@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <string>
 
 using namespace std;
 
@@ -36,7 +37,14 @@ void newReservation();                      // To add a reservation.
 void editReservation();                     // To edit a reservation.
 void viewReservation();                     // To view a reservation.
 void viewAllReservations();                 // To view all of the reservations.
+void deleteReservation(int nRoom);          // To delete a preexisting record.
 int getNumberOfReservations();              // Returns the number of entries in the file.
+int showClientDetails(int nRoom);           // Prints the client details to the console and returns -1 if no record is found.
+
+void clear() {
+    for (int i = 0; i < 100; i++)
+        cout << endl;
+}
 
 int checkStatus(int nRoom) {
     int flag = 0;
@@ -92,41 +100,100 @@ checkRoom:
     hotel.newReservation(sName, nNights, nRoom);                    // Passes on the variables to the class "hotel"
     outfile.write((char*)&hotel, sizeof(hotel));
     outfile.close();
-    cout << endl << endl;
 }
 
 void viewReservation() {
     ifstream infile("database", ios::binary | ios::in);
     int nRoom;
-    int nNumberOfReservations = getNumberOfReservations();
-    int flag = -1;
+    string sDummyVariable;
     cout << "Please enter your room number: ";
     cin >> nRoom;
+    showClientDetails(nRoom);
+    cout << endl << endl;
+    cout << "Press any key to continue.";
+    cin.ignore();
+    getline(cin, sDummyVariable);
+    infile.close();
+}
+
+void editReservation() {
+    int nRoom;
+    string sDummyVariable;
+    int flag = 0;
+    string reply;
+    cout << "Please enter your room number: ";
+    cin >> nRoom;
+    flag = showClientDetails(nRoom);
+    if (flag == 0) {
+        cout << "Are you sure you want to change this record? ";
+        cin >> reply;
+        if (reply == "y" || reply == "Y") {
+            deleteReservation(nRoom);
+            newReservation();
+        }
+    }
+    cout << "Press any key to continue.";
+    cin.ignore();
+    getline(cin, sDummyVariable);
+}
+
+void viewAllReservations() {
+    ifstream infile("database", ios::binary | ios::in);
+    int flag = -1;
+    string sDummyVariable;
+    int nNumberOfReservations = getNumberOfReservations();
+    cout << setw(20) << left << "Name" << setw(12) << left << "Nights" << "Room No." << endl << endl;
+    
     for (int i = 0; i < nNumberOfReservations; i++) {
         infile.read((char*)&hotel, sizeof(hotel));
-        if (nRoom == hotel.getRoom()) {                             // Cycles through to find the required room number.
-            cout << "Name:" << "\t\t" << hotel.getName() << endl;
-            cout << "Nights:" << "\t\t" << hotel.getNights() << endl;
-            cout << "Room No.:" << "\t" << hotel.getRoom() << endl;
-            flag = 0;
-        }
+        cout << setw(20) << left << hotel.getName() << setw(12) << left << hotel.getNights() << hotel.getRoom() << endl;
+        flag = 0;
     }
     if (flag == -1) {
         cout << "Sorry, no record found.";
     }
     cout << endl << endl;
+    cout << "Press any key to continue.";
+    cin.ignore();
+    getline(cin, sDummyVariable);
     infile.close();
 }
 
-void editReservation() {
+void deleteReservation(int nRoom) {
+    ofstream outfile("temp", ios::binary | ios::out | ios::app);
     ifstream infile("database", ios::binary | ios::in);
-    ofstream outfile("database", ios::binary | ios::out | ios::app);
-    int nRoom;
+    int nNumberOfReservations = getNumberOfReservations();
+    for (int i = 0; i < nNumberOfReservations; i++) {
+        cout << i;
+        infile.read((char*)&hotel, sizeof(hotel));
+        if (nRoom != hotel.getRoom()) {
+            outfile.write((char*)&hotel, sizeof(hotel));
+            
+        }
+        
+    }
+    infile.close();
+    outfile.close();
+    rename("temp", "database");
+}
+
+int getNumberOfReservations() {
+    ifstream infile("database", ios::binary | ios::in);
+    int nNumberOfEntries = -1;                                      // Initialized to -1, to fix overcounting.
+    while (!infile.eof()) {
+        infile.read((char*)&hotel, sizeof(hotel));
+        nNumberOfEntries++;
+    }
+    infile.close();
+    return nNumberOfEntries;
+}
+
+int showClientDetails(int nRoom) {
+    ifstream infile("database", ios::binary | ios::in);
     int nNumberOfReservations = getNumberOfReservations();
     int flag = -1;
-    string reply;
-    cout << "Please enter your room number: ";
-    cin >> nRoom;
+    cout << endl;
+    
     for (int i = 0; i < nNumberOfReservations; i++) {
         infile.read((char*)&hotel, sizeof(hotel));
         if (nRoom == hotel.getRoom()) {                             // Cycles through to find the required room number.
@@ -140,48 +207,11 @@ void editReservation() {
     if (flag == -1) {
         cout << "Sorry, no record found.";
     }
-    else {
-        cout << "Are you sure you want to change this record? ";
-        cin >> reply;
-        if (reply == "y" || reply == "Y") {
-            string sName;
-            int nNights;
-            cout << "Please enter the following details:" << endl << endl;
-            cout << "Name:" << "\t\t";
-            cin.ignore();
-            getline(cin , sName);
-            cout << "Nights:" << "\t\t";
-            cin >> nNights;
-            cout << "Room No.:" << "\t";
-            cin >> nRoom;
-            cout << endl;
-            hotel.newReservation(sName, nNights, nRoom);
-            outfile.write((char*)&hotel, sizeof(hotel));
-        }
-    }
-    cout << endl << endl;
-    outfile.close();
     infile.close();
+    return flag;
 }
 
-void viewAllReservations() {
-    ifstream infile("database", ios::binary | ios::in);
-    int flag = -1;
-    int nNumberOfReservations = getNumberOfReservations();
-    cout << "Name" << "\t\t\t\t" << "Nights" << "\t\t" << "Room No." << endl << endl;
-    for (int i = 0; i < nNumberOfReservations; i++) {
-        infile.read((char*)&hotel, sizeof(hotel));
-        cout << setw(20) << left << hotel.getName() << setw(12) << left << hotel.getNights() << hotel.getRoom() << endl;
-        flag = 0;
-    }
-    if (flag == -1) {
-        cout << "Sorry, no record found.";
-    }
-    cout << endl << endl;
-    infile.close();
-}
-
-int home(){
+int home() {
     int flag;
     
     cout << "\t\t\t" << "------------" << endl;                     // Home Banner.
@@ -200,29 +230,20 @@ int home(){
     cout << endl << endl;
     
     switch (flag) {
-        case 1: newReservation(); return 0;
-        case 2: viewReservation(); return 0;
-        case 3: editReservation(); return 0;
-        case 4: viewAllReservations(); return 0;
-        case 5: return -1;
+        case 1: clear(); newReservation(); return 0;
+        case 2: clear(); viewReservation(); return 0;
+        case 3: clear(); editReservation(); return 0;
+        case 4: clear(); viewAllReservations(); return 0;
+        case 5: exit(0); return -1;
         default: home(); return 0;
     }
 }
 
-int getNumberOfReservations() {
-    ifstream infile("database", ios::binary | ios::in);
-    int nNumberOfEntries = -1;                                      // Initialized to -1, to fix overcounting.
-    while (!infile.eof()) {
-        infile.read((char*)&hotel, sizeof(hotel));
-        nNumberOfEntries++;
-    }
-    infile.close();
-    return nNumberOfEntries;
-}
-
 int main() {
     int nLoop = 0;
-    while (nLoop == 0)
+    while (nLoop == 0) {
+        clear();
         nLoop = home();
+    }
     return 0;
 }

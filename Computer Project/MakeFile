@@ -1,1 +1,2 @@
-g++ main.cpp -o hotel
+hotel: main.cpp
+	g++ main.cpp -o hotel -std=c++0x
