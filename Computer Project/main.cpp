@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -35,6 +36,7 @@ void newReservation();                      // To add a reservation.
 void editReservation();                     // To edit a reservation.
 void viewReservation();                     // To view a reservation.
 void viewAllReservations();                 // To view all of the reservations.
+int getNumberOfReservations();              // Returns the number of entries in the file.
 
 int checkStatus(int nRoom) {
     int flag = 0;
@@ -96,10 +98,11 @@ checkRoom:
 void viewReservation() {
     ifstream infile("database", ios::binary | ios::in);
     int nRoom;
+    int nNumberOfReservations = getNumberOfReservations();
     int flag = -1;
     cout << "Please enter your room number: ";
     cin >> nRoom;
-    while (!infile.eof()) {
+    for (int i = 0; i < nNumberOfReservations; i++) {
         infile.read((char*)&hotel, sizeof(hotel));
         if (nRoom == hotel.getRoom()) {                             // Cycles through to find the required room number.
             cout << "Name:" << "\t\t" << hotel.getName() << endl;
@@ -119,11 +122,12 @@ void editReservation() {
     ifstream infile("database", ios::binary | ios::in);
     ofstream outfile("database", ios::binary | ios::out | ios::app);
     int nRoom;
+    int nNumberOfReservations = getNumberOfReservations();
     int flag = -1;
     string reply;
     cout << "Please enter your room number: ";
     cin >> nRoom;
-    while (!infile.eof()) {
+    for (int i = 0; i < nNumberOfReservations; i++) {
         infile.read((char*)&hotel, sizeof(hotel));
         if (nRoom == hotel.getRoom()) {                             // Cycles through to find the required room number.
             cout << "Name:" << "\t\t" << hotel.getName() << endl;
@@ -137,7 +141,7 @@ void editReservation() {
         cout << "Sorry, no record found.";
     }
     else {
-        cout << "Are you sure you wan to change this record? ";
+        cout << "Are you sure you want to change this record? ";
         cin >> reply;
         if (reply == "y" || reply == "Y") {
             string sName;
@@ -163,10 +167,11 @@ void editReservation() {
 void viewAllReservations() {
     ifstream infile("database", ios::binary | ios::in);
     int flag = -1;
-    cout << "Name" << "\t\t\t\t" << "Nights" << "\t" << "Room No." << endl << endl;
-    while (!infile.eof()) {
+    int nNumberOfReservations = getNumberOfReservations();
+    cout << "Name" << "\t\t\t\t" << "Nights" << "\t\t" << "Room No." << endl << endl;
+    for (int i = 0; i < nNumberOfReservations; i++) {
         infile.read((char*)&hotel, sizeof(hotel));
-        cout << hotel.getName() << "\t\t" << hotel.getNights() << "\t\t" << hotel.getRoom() << endl;
+        cout << setw(20) << left << hotel.getName() << setw(12) << left << hotel.getNights() << hotel.getRoom() << endl;
         flag = 0;
     }
     if (flag == -1) {
@@ -202,6 +207,17 @@ int home(){
         case 5: return -1;
         default: home(); return 0;
     }
+}
+
+int getNumberOfReservations() {
+    ifstream infile("database", ios::binary | ios::in);
+    int nNumberOfEntries = -1;                                      // Initialized to -1, to fix overcounting.
+    while (!infile.eof()) {
+        infile.read((char*)&hotel, sizeof(hotel));
+        nNumberOfEntries++;
+    }
+    infile.close();
+    return nNumberOfEntries;
 }
 
 int main() {
