@@ -1,9 +1,9 @@
 # Computer-Project
 Command line menu based project to book, view or edit a reservation:- 
 
-<      ------------
+      ------------
           Home
-       ------------
+      ------------
 
 To proceed, please choose from one of the given options:
 
